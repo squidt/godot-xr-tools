@@ -23,8 +23,7 @@ extends XRToolsPickable
 @export var snap_distance : float = 0.3
 
 
-## Transform3D that ignores driven behavior
-var _is_driven_change  := false
+## Transform3D that ignores changes when grabbed
 var _private_transform : Transform3D
 
 
@@ -62,10 +61,8 @@ func _process(_delta: float) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_LOCAL_TRANSFORM_CHANGED:
-		# If change NOT from driven behavior (handle being grabbed/ moved)
-		if !_is_driven_change:
-			_private_transform = transform
-		_is_driven_change = false
+		# Save Origin from any local changes (handle movements are global)
+		_private_transform = transform
 
 
 # Add support for is_xr_class on XRTools classes
@@ -79,7 +76,6 @@ func pick_up(by) -> void:
 	super(by)
 
 	# Enable the process function while held
-	_is_driven_change = true
 	set_process(true)
 
 
