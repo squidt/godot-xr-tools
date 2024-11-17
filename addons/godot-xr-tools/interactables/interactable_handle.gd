@@ -23,13 +23,13 @@ extends XRToolsPickable
 @export var snap_distance : float = 0.3
 
 
-# Handle origin spatial node
-@onready var handle_origin: Node3D = get_parent()
+## Transform3D that ignores driven behavior
+var _is_driven_change  := false
+var _private_transform : Transform3D
 
 
-# Add support for is_xr_class on XRTools classes
-func is_xr_class(name : String) -> bool:
-	return name == "XRToolsInteractableHandle" or super(name)
+func _enter_tree() -> void:
+	set_notify_local_transform(true)
 
 
 # Called when this handle is added to the scene
@@ -37,8 +37,11 @@ func _ready() -> void:
 	# In Godot 4 we must now manually call our super class ready function
 	super()
 
-	# Ensure we start at our origin
-	transform = Transform3D.IDENTITY
+	# freeze when not activated
+	freeze = true
+
+	# Set our Origin
+	_private_transform = transform
 
 	# Turn off processing - it will be turned on only when held
 	set_process(false)
@@ -51,10 +54,23 @@ func _process(_delta: float) -> void:
 		return
 
 	# If too far from the origin then drop the handle
-	var origin_pos = handle_origin.global_transform.origin
+	var origin_pos = _private_transform.origin
 	var handle_pos = global_transform.origin
 	if handle_pos.distance_to(origin_pos) > snap_distance:
 		drop()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_LOCAL_TRANSFORM_CHANGED:
+		# If change NOT from driven behavior (handle being grabbed/ moved)
+		if !_is_driven_change:
+			_private_transform = transform
+		_is_driven_change = false
+
+
+# Add support for is_xr_class on XRTools classes
+func is_xr_class(name : String) -> bool:
+	return name == "XRToolsInteractableHandle" or super(name)
 
 
 # Called when the handle is picked up
@@ -63,6 +79,7 @@ func pick_up(by) -> void:
 	super(by)
 
 	# Enable the process function while held
+	_is_driven_change = true
 	set_process(true)
 
 
@@ -75,14 +92,4 @@ func let_go(by: Node3D, _p_linear_velocity: Vector3, _p_angular_velocity: Vector
 	set_process(false)
 
 	# Snap the handle back to the origin
-	transform = Transform3D.IDENTITY
-
-
-# Check handle configurationv
-func _get_configuration_warnings() -> PackedStringArray:
-	var warnings := PackedStringArray()
-
-	if !transform.is_equal_approx(Transform3D.IDENTITY):
-		warnings.append("Interactable handle must have no transform from its parent handle origin")
-
-	return warnings
+	transform = _private_transform
