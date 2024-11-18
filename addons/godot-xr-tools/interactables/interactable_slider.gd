@@ -36,13 +36,15 @@ signal slider_moved(offset: float)
 
 ## Signal for slider moved
 ## Slider step size (zero for no steps)
-@export var slider_steps : float = 0.0
+@export var slider_steps : float = 0.0:
+	set(v):
+		slider_steps = maxf(v, 0)
 
 ## Slider position - move to test the position setup
 @export var slider_position : float = 0.0:
 	set(v):
 		# Apply slider step-quantization
-		if is_zero_approx(slider_steps):
+		if !is_zero_approx(slider_steps):
 			v = roundf(v / slider_steps) * slider_steps
 
 		# Clamp position
