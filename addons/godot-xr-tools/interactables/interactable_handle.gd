@@ -23,13 +23,22 @@ extends XRToolsPickable
 @export var snap_distance : float = 0.3
 
 
-# Handle origin excluding grab movement
-var handle_origin: Vector3
-
+# Handle transform before grab movement
+var handle_origin : Transform3D
+var _private_change := false
 
 # Add support for is_xr_class on XRTools classes
 func is_xr_class(name : String) -> bool:
 	return name == "XRToolsInteractableHandle" or super(name)
+
+
+func _enter_tree():
+	set_notify_local_transform(true)
+
+
+func _notification(what):
+	if what == NOTIFICATION_LOCAL_TRANSFORM_CHANGED:
+		pass
 
 
 # Called when this handle is added to the scene
@@ -41,7 +50,7 @@ func _ready() -> void:
 	freeze = true
 
 	# Ensure we start at our origin
-	handle_origin = position
+	handle_origin = transform
 
 	# Turn off processing - it will be turned on only when held
 	set_process(false)
@@ -52,9 +61,9 @@ func _process(_delta: float) -> void:
 	# Skip if not picked up
 	if not is_picked_up():
 		return
-
+	
 	# If too far from the origin then drop the handle
-	if position.distance_to(handle_origin) > snap_distance:
+	if position.distance_to(handle_origin.origin) > snap_distance:
 		drop()
 
 
@@ -64,6 +73,7 @@ func pick_up(by) -> void:
 	super(by)
 
 	# Enable the process function while held
+	_private_change = true
 	set_process(true)
 
 
@@ -73,7 +83,8 @@ func let_go(by: Node3D, _p_linear_velocity: Vector3, _p_angular_velocity: Vector
 	super(by, Vector3.ZERO, Vector3.ZERO)
 
 	# Disable the process function as no-longer held
+	_private_change = false
 	set_process(false)
 
 	# Snap the handle back to the origin
-	position = handle_origin
+	transform = handle_origin

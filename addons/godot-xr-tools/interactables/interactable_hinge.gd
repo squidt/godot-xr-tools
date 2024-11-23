@@ -82,8 +82,7 @@ func _process(_delta: float) -> void:
 		# global handle + handle_origin position
 		var axis := get_final_axis()
 		var to_handle        : Vector3 = handle.global_transform.origin * global_transform
-		var to_handle_origin : Vector3 = handle.handle_origin.global_transform.origin * global_transform
-		var a_old = to_handle_origin.signed_angle_to(to_handle, axis)
+		var to_handle_origin : Vector3 = handle.handle_origin.origin * global_transform
 
 		# project 'to_handle' and 'to_handle_origin' on 'axis'
 		# then measure the angle
