@@ -18,6 +18,11 @@ extends XRToolsInteractableHandleDriven
 ## Signal for hinge moved
 signal hinge_moved(angle)
 
+## Enables/ disables hinge behavior
+@export var enabled := true:
+	set(v):
+		enabled = v
+		set_process(v)
 
 ## Hinge minimum limit
 @export var hinge_limit_min : float = -45.0: set = _set_hinge_limit_min
@@ -67,6 +72,9 @@ func _ready():
 
 # Called every frame when one or more handles are held by the player
 func _process(_delta: float) -> void:
+	if grabbed_handles.is_empty():
+		return
+		
 	# Get the total handle angular offsets
 	var offset_sum := 0.0
 	for item in grabbed_handles:
@@ -134,7 +142,9 @@ func _set_hinge_steps(value: float) -> void:
 
 # Called when hinge_position is set externally
 func _set_hinge_position(value: float) -> void:
-		
+	if !enabled:
+		return
+
 	_is_driven_change = true
 	var rads := deg_to_rad(value)
 	rads = _do_move_hinge(rads)

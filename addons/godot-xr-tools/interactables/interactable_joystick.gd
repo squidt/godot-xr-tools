@@ -26,6 +26,12 @@ const VECTOR_XZ := Vector3(1.0, 0.0, 1.0)
 const VECTOR_YZ := Vector3(0.0, 1.0, 1.0)
 
 
+## Enables/ disables joystick behavior
+@export var enabled := true:
+	set(v):
+		enabled = v
+		set_process(v)
+
 ## Joystick X minimum limit
 @export var joystick_x_limit_min : float = -45.0: set = _set_joystick_x_limit_min
 
@@ -131,6 +137,9 @@ func _process(_delta: float) -> void:
 
 # Move the joystick to the specified position
 func move_joystick(position_x: float, position_y: float) -> void:
+	if !enabled:
+		return
+
 	# Do the move
 	var position := _do_move_joystick(Vector2(position_x, position_y))
 	if position.x == _joystick_x_position_rad and position.y == _joystick_y_position_rad:

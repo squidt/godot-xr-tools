@@ -21,6 +21,11 @@ extends XRToolsInteractableHandleDriven
 
 signal slider_moved(offset: float)
 
+## Enables/ disables slider behavior
+@export var enabled := true:
+	set(v):
+		enabled = v
+		set_process(v)
 
 ## Start position for slide, can be positiv and negativ in values
 @export var slider_limit_min : float = 0.0:
@@ -43,6 +48,9 @@ signal slider_moved(offset: float)
 ## Slider position - move to test the position setup
 @export var slider_position : float = 0.0:
 	set(v):
+		if !enabled:
+			return
+
 		# Apply slider step-quantization
 		if !is_zero_approx(slider_steps):
 			v = roundf(v / slider_steps) * slider_steps
@@ -59,6 +67,7 @@ signal slider_moved(offset: float)
 		position = _private_transform.origin - (v * get_slider_direction())
 		slider_position = v
 		slider_moved.emit(v)
+
 
 ## Default position
 @export var default_position : float = 0.0

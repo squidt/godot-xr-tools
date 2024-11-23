@@ -16,6 +16,8 @@ signal button_pressed(button)
 ## Button released event
 signal button_released(button)
 
+## Enables/ disables button behavior
+@export var enabled := true
 
 ## Button object
 @export var button := NodePath()
@@ -68,6 +70,9 @@ func _on_button_entered(item: Node3D) -> void:
 	# Add to the dictionary of trigger items
 	_trigger_items[item] = item
 
+	if !enabled:
+		return
+
 	# Detect transition to pressed
 	if !pressed:
 		# Update state to pressed
@@ -91,6 +96,9 @@ func _on_button_entered(item: Node3D) -> void:
 func _on_button_exited(item: Node3D) -> void:
 	# Remove from the dictionary of triggered items
 	_trigger_items.erase(item)
+
+	if !enabled:
+		return
 
 	# Detect transition to released
 	if pressed and _trigger_items.is_empty():
