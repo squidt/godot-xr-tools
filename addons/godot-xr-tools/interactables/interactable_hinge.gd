@@ -74,25 +74,38 @@ func _ready():
 func _process(_delta: float) -> void:
 	if grabbed_handles.is_empty():
 		return
-		
+
 	# Get the total handle angular offsets
 	var offset_sum := 0.0
 	for item in grabbed_handles:
 		var handle := item as XRToolsInteractableHandle
-		# global handle + handle_origin position
 		var axis := get_final_axis()
-		var to_handle        : Vector3 = handle.global_transform.origin * global_transform
-		var to_handle_origin : Vector3 = handle.handle_origin.origin * global_transform
 
-		# project 'to_handle' and 'to_handle_origin' on 'axis'
-		# then measure the angle
-		offset_sum += atan2(to_handle_origin.cross(to_handle).dot(axis), to_handle.dot(to_handle_origin))
+		# Move to local space
+		var to_handle := to_local(handle.global_position)
+		var to_origin := to_local(handle.handle_origin.origin)
+		var start := handle.handle_origin.origin
+
+		# Find angle
+		var axis_plane = Plane(axis)
+		var h_flat = axis_plane.project(to_handle)
+		var o_flat = axis_plane.project(to_origin)
+
+		# Angle from origin to handle on the plane of "axis"
+		var angle1 = o_flat.signed_angle_to(-h_flat, axis)
+
+		# Angle from "UP" to starting position of the handle
+		var start_angle = Vector3.UP.signed_angle_to(start, axis)
+
+		var offset = angle1-start_angle
+
+		offset_sum += offset
 
 	# Average the angular offsets
 	var offset := offset_sum / grabbed_handles.size()
 
 	# Move the hinge by the requested offset
-	move_hinge(_hinge_position_rad + offset)
+	move_hinge(offset)
 
 
 ## Return a unit vector of the final rotation axis
